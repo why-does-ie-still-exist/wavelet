@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 class SearchHandler implements URLHandler {
   ArrayList<String> searchterms = new ArrayList<>();
@@ -54,7 +55,7 @@ class SearchHandler implements URLHandler {
       for (Map.Entry<String, String> kvpair : querysearchpairs.entrySet()) {
         if (kvpair.getKey().equalsIgnoreCase("s")) {
           for (String s : searchterms) {
-            if (s.contains(kvpair.getValue())) {
+            if (containsCaseInsensitive(s, kvpair.getValue())) {
               response.append(kvpair.getValue());
               response.append(" in ");
               response.append(s);
@@ -70,6 +71,10 @@ class SearchHandler implements URLHandler {
       return response.toString();
     }
     return MESSAGE404;
+  }
+
+  boolean containsCaseInsensitive(String a, String b){
+    return Pattern.compile(Pattern.quote(b), Pattern.CASE_INSENSITIVE).matcher(a).find();
   }
 }
 
