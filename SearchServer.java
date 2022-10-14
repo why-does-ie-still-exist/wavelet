@@ -17,7 +17,7 @@ class SearchHandler implements URLHandler {
 
   public String handleRequest(URI url) {
     HashMap<String, String> querysearchpairs = new HashMap<>();
-    if (url.getPath().equals("/")) {
+    if (url.getPath().matches("/+")) {
       return "<!DOCTYPE html>\n"
           + "<html>\n"
           + "<body>\n"
