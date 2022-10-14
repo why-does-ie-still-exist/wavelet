@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -5,8 +6,10 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 class SearchHandler implements URLHandler {
   ArrayList<String> searchterms = new ArrayList<>();
@@ -73,20 +76,49 @@ class SearchHandler implements URLHandler {
     return MESSAGE404;
   }
 
-  boolean containsCaseInsensitive(String a, String b){
+  boolean containsCaseInsensitive(String a, String b) {
     return Pattern.compile(Pattern.quote(b), Pattern.CASE_INSENSITIVE).matcher(a).find();
   }
 }
 
 class SearchServer {
   public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.out.println("Missing port number! Try any number between 1024 to 49151");
-      return;
+    SearchHandler handler = new SearchHandler();
+    switch (args.length) {
+      case 0:
+        System.out.println("Missing port number! Try any number between 1024 to 49151");
+        return;
+      case 1:
+        System.out.println("Did not find directory to search. Running normally.");
+        break;
+      case 2:
+        String dir = args[1];
+        File toSearch = new File(dir);
+        if (!toSearch.exists()) {
+          System.out.println("No such directory: " + dir);
+        }
+        System.out.println("Found directory to add to search terms: " + dir);
+        handler.searchterms.addAll(
+            getFiles(toSearch).stream().map((File f) -> f.getPath()).collect(Collectors.toList()));
+        break;
+      default:
+        System.out.println("Too many arguments: " + args);
+        return;
     }
+    int port = Integer.parseInt(args[0].trim());
+    Server.start(port, handler);
+  }
 
-    int port = Integer.parseInt(args[0]);
-
-    Server.start(port, new SearchHandler());
+  public static List<File> getFiles(File start) throws IOException {
+    List<File> result = new ArrayList<>();
+    if (start.isFile()) {
+      result.add(start);
+    } else {
+      File[] paths = start.listFiles();
+      for (File subFile : paths) {
+        result.addAll(getFiles(subFile));
+      }
+    }
+    return result;
   }
 }
